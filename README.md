@@ -1,8 +1,6 @@
 Se recomienda tener instaladas las siguientes herramientas en el ordenador:
 
--Visual Studio Code
--PostgreSQL (pgAdmin)
--Python 3 
+                  Visual Studio Code - PostgreSQL (pgAdmin) - Python 3 
 
 Para instalar los requerimientos del proyecto escribir el siguiente comando en CMD o en la terminal de Visual Studio Code: 
 				

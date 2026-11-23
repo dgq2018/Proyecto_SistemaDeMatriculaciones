@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<div class="d-flex justify-content-between align-items-end mb-5 pb-4 border-bottom">
+    <div class="d-flex align-items-center">
+        <div class="text-dark rounded-4 p-3 d-flex align-items-center justify-content-center shadow" 
+             style="width: 70px; height: 70px; background: linear-gradient(135deg, #FFD000 0%, #E6B800 100%);">
+            <i class="bi bi-archive-fill fs-1"></i>
+        </div>
+        <div class="ms-4">
+            <h1 class="fw-bold text-dark mb-0 ls-tight" style="font-size: 2.5rem;">Archivo Histórico</h1>
+            <p class="text-secondary mb-0 fs-5 opacity-75">Estudiantes dados de baja (Inactivos)</p>
+        </div>
+    </div>
+    <a href="{{ url_for('estudiantes') }}" class="btn btn-outline-primary btn-lg rounded-pill px-4 shadow-sm fw-bold d-flex align-items-center" 
+       style="height: 55px; border-color: #1e293b; color: #1e293b;">
+        <i class="bi bi-arrow-left me-2 fs-4"></i> Volver a Activos
+    </a>
+</div>
+
+<div class="card p-3 shadow-sm border-0 bg-white mb-4 rounded-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 ps-4">
+                    <i class="bi bi-search" style="color: #E6B800;"></i>
+                </span>
+                <input type="text" id="buscadorInactivos" class="form-control border-0 shadow-none fs-6" placeholder="Buscar por documento o nombre en el archivo...">
+                <button class="btn btn-white border-0 pe-4" type="button" id="limpiarBusquedaInactivos">
+                    <i class="bi bi-x-circle text-muted"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <span class="text-muted small text-uppercase fw-bold">Total Archivados:</span>
+            <span class="badge rounded-pill px-3 py-2 ms-2 fs-6" style="background-color: #1e293b; color: #FFD000;">{{ estudiantes|length }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive shadow-lg rounded-4 overflow-hidden border-0">
+    <table class="table table-hover align-middle mb-0 bg-white">
+        <thead style="background-color: #1e293b; color: #FFD000;">
+            <tr class="text-center">
+                <th class="py-3 px-4 text-start" style="width: 80px;">ID</th>
+                <th class="text-start py-3">Estudiante</th>
+                <th class="py-3">Documento (CI)</th>
+                <th class="py-3">Estado</th>
+                <th class="py-3 text-end px-4" style="width: 200px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTablaInactivos">
+            {% for est in estudiantes %}
+            <tr class="fila-inactivo shadow-none">
+                <td class="px-4 text-start"><span class="text-muted fw-bold small">#{{ est[0] }}</span></td>
+                <td class="text-start">
+                    <div class="d-flex align-items-center opacity-75">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 40px; height: 40px; background-color: #f1f5f9;">
+                            <span class="text-secondary fw-bold text-uppercase" style="font-size: 0.8rem;">{{ est[1][0] }}{{ est[2][0] }}</span>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-6">{{ est[1] }}, {{ est[2] }}</div>
+                            <div class="text-muted small">Registro Histórico</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-light text-dark border px-2 py-1">{{ est[3] }}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge rounded-pill px-3 small border border-danger-subtle text-danger" style="background-color: #fff5f5;">Inactivo</span>
+                </td>
+                <td class="text-end px-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm fw-bold btn-reactivar" 
+                                data-url="{{ url_for('reactivar_estudiante_ruta', id=est[0]) }}"
+                                data-nombre="{{ est[1] }} {{ est[2] }}">
+                            <i class="bi bi-person-check-fill me-1"></i> Reactivar
+                        </button>
+
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm fw-bold btn-eliminar-permanente"
+                                data-url="{{ url_for('eliminar_estudiante_definitivo_ruta', id=est[0]) }}"
+                                data-nombre="{{ est[1] }} {{ est[2] }}">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <div class="opacity-25">
+                        <i class="bi bi-folder2-open fs-1 mb-3 d-block"></i>
+                        <h4 class="fw-bold">El archivo está vacío</h4>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            <tr id="sinCoincidenciasInactivos" style="display: none;">
+                <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="bi bi-person-x fs-1 mb-3 d-block"></i>
+                    <h4 class="fw-bold">No se encontraron coincidencias</h4>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .ls-tight { letter-spacing: -1.5px; }
+    .fila-inactivo { transition: all 0.2s ease; }
+    .fila-inactivo:hover { background-color: #f8fafc !important; transform: scale(1.002); }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- BÚSQUEDA ---
+    const inputBusqueda = document.getElementById('buscadorInactivos');
+    const btnLimpiar = document.getElementById('limpiarBusquedaInactivos');
+    const filas = document.querySelectorAll('.fila-inactivo');
+    const filaVacia = document.getElementById('sinCoincidenciasInactivos');
+
+    if(inputBusqueda) {
+        inputBusqueda.addEventListener('input', function() {
+            const valor = inputBusqueda.value.toLowerCase().trim();
+            let coincidencias = 0;
+
+            filas.forEach(fila => {
+                const texto = fila.innerText.toLowerCase();
+                if (texto.includes(valor)) {
+                    fila.style.display = '';
+                    coincidencias++;
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+            filaVacia.style.display = (coincidencias === 0 && valor !== "") ? '' : 'none';
+        });
+
+        btnLimpiar.addEventListener('click', function() {
+            inputBusqueda.value = '';
+            filas.forEach(f => f.style.display = '');
+            filaVacia.style.display = 'none';
+            inputBusqueda.focus();
+        });
+    }
+
+    // --- ALERTAS (REACTIVAR) ---
+    document.querySelectorAll('.btn-reactivar').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const nombre = this.dataset.nombre;
+
+            Swal.fire({
+                title: '<span style="color: #1e293b">¿Reactivar Estudiante?</span>',
+                html: `¿Deseas devolver a <b>${nombre}</b> a la lista de estudiantes activos?`,
+                icon: 'question',
+                iconColor: '#198754',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, reactivar',
+                cancelButtonText: 'Cancelar',
+                borderRadius: '20px',
+                customClass: { popup: 'rounded-4 shadow-lg border-0' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+
+    // --- ALERTAS (ELIMINAR DEFINITIVO) ---
+    document.querySelectorAll('.btn-eliminar-permanente').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const nombre = this.dataset.nombre;
+
+            Swal.fire({
+                title: '<span style="color: #dc3545">ADVERTENCIA CRÍTICA</span>',
+                html: `Estás a punto de borrar permanentemente a:<br><b>${nombre}</b><br><br><span class="text-danger small">Esta acción eliminará su historial y no se puede deshacer.</span>`,
+                icon: 'warning',
+                iconColor: '#dc3545',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar para siempre',
+                cancelButtonText: 'Cancelar',
+                borderRadius: '20px',
+                customClass: { popup: 'rounded-4 shadow-lg border-0' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}

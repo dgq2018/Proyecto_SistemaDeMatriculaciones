@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block estilos %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/inscripciones.css') }}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-end mb-5 pb-4 border-bottom no-pdf" style="border-color: #F5D142 !important;">
+        <div class="d-flex align-items-center">
+            <div class="text-dark rounded-4 p-3 d-flex align-items-center justify-content-center shadow" style="width: 70px; height: 70px; background-color: #F5D142;">
+                <i class="bi bi-person-gear fs-1"></i>
+            </div>
+            <div class="ms-4">
+                <h1 class="fw-bold text-dark mb-0 ls-tight" style="font-size: 2.5rem;">
+                    Inscripciones
+                </h1>
+                <p class="text-secondary mb-0 fs-5 opacity-75">
+                    Administración por Grado
+                </p>
+            </div>
+        </div>
+        
+        {% if es_periodo_editable %}
+            <button type="button" 
+                class="btn btn-lg rounded-pill px-4 shadow-sm fw-bold btn-gris-oscuro" 
+                data-bs-toggle="modal" 
+                data-bs-target="#modalInscripcion">
+                <i class="bi bi-plus-circle-fill me-2"></i> Nueva Inscripción
+            </button>
+        {% else %}
+            <button class="btn rounded-pill px-4" style="background-color: #334155; color: #F5D142;" disabled>
+                <i class="bi bi-lock-fill me-2"></i> Año Histórico (Solo Lectura)
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center no-pdf py-3 border-bottom mb-4 bg-white sticky-top" style="top: 0; z-index: 10; border-color: #F5D142 !important;">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center me-2">
+            <i class="bi bi-stack fs-3" style="color: #334155;"></i> 
+            <span class="ms-3 fw-bold text-dark uppercase-tracking fs-4">SECCIONES</span>
+        </div>
+        <div class="border-start border-2" style="height: 32px; border-color: #F5D142 !important;"></div>
+        <div class="d-flex align-items-center gap-2 ps-2">
+            <div class="badge rounded-pill bg-light text-secondary border shadow-sm px-3 py-2 fs-6 fw-normal d-flex align-items-center" style="border-color: #F5D142 !important;">
+                <i class="bi bi-calendar3 me-2" style="color: #334155;"></i>
+                <span class="small text-uppercase me-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Ciclo Actual:</span>
+                <span class="fw-bold text-dark">{{ periodo_nombre }}</span> 
+            </div>
+        </div>
+    </div>
+    <span class="badge rounded-pill px-3 py-2 shadow-sm uppercase-tracking" style="background-color: #334155; color: #FFFB7D;">
+        {{ grados|length }} Grados Registrados
+    </span>
+</div>
+
+<div class="accordion shadow-none" id="accordionInscripciones">
+    {% for grado in grados %}
+    <div class="accordion-item border-0 mb-4" style="background-color: transparent;">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed fw-bold shadow-sm rounded-4 d-flex justify-content-between align-items-center" 
+                    style="background-color: #1e293b !important; color: #ffffff !important; border-left: 6px solid #FFD000 !important; padding: 1.25rem 1.5rem;"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ grado[0] }}">
+                <div class="d-flex align-items-center w-100">
+                    <span>
+                        <i class="bi bi-folder2-open me-3" style="color: #FFD000;"></i> {{ grado[1] }}
+                    </span>
+                    <i class="bi bi-caret-down-fill accordion-icon ms-auto" style="color: #FFD000; transition: transform 0.3s;"></i> 
+                </div>
+            </button>
+        </h2>
+
+        <div id="collapse{{ grado[0] }}" class="accordion-collapse collapse" data-bs-parent="#accordionInscripciones">
+            <div class="accordion-body p-0 bg-white rounded-bottom-4 border-0 shadow-lg overflow-hidden">
+                
+                <div class="web-header p-4 no-pdf border-bottom d-flex justify-content-between align-items-center" style="background-color: #f8fafc;">
+                    <h3 class="fw-bold text-dark m-0" style="font-size: 1.25rem;">
+                        <i class="bi bi-person-lines-fill me-2" style="color: #FFD000 !important;"></i>Nómina de Estudiantes
+                    </h3>
+
+                    {% if es_periodo_editable and not es_historial and loop.index > 1 %}
+                        <div class="text-end">
+                            <button type="button" 
+                                    class="btn btn-sm rounded-pill shadow-sm fw-bold px-4"
+                                    style="border: 2px solid #1e293b; color: #1e293b; background: transparent;"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalConfirmarPromocion-{{ grado[0] }}">
+                                <i class="bi bi-person-up me-1"></i> Importar Ciclo Anterior
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# TABLA DE ESTUDIANTES #}
+                {% set alumnos = inscripciones_por_grado[grado[0]] %}
+                {% if alumnos %}
+                <div class="table-responsive p-4">
+                    <table class="table table-hover align-middle table-web" id="tabla-original-{{ grado[0] }}" style="font-size: 0.95rem; border-collapse: separate; border-spacing: 0 5px;">
+                        <thead style="background-color: #1e293b; color: #FFD000;"> 
+                            <tr>
+                                <th class="text-center py-3" style="width: 60px; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">#</th>
+                                <th>Apellido</th>
+                                <th>Nombre</th>
+                                <th class="text-center">Documento</th>
+                                <th class="text-center col-accion no-pdf" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alum in alumnos %}
+                            <tr class="shadow-sm">
+                                <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                                <td class="fw-semibold text-dark">{{ alum.get('apellido') or '---' }}</td>
+                                <td>{{ alum.get('nombre') or '---' }}</td>
+                                <td class="text-center"><span class="badge bg-light text-dark border">{{ alum.get('documento', '---') }}</span></td>
+                                <td class="text-center">
+                                    {% if not es_historial and es_periodo_editable %}
+                                        <a href="#" 
+                                        class="btn btn-outline-danger btn-sm rounded-circle shadow-sm btn-eliminar-inscripcion"
+                                        data-url="{{ url_for('eliminar_inscripcion_ruta', id=alum.get('id')) }}"
+                                        data-nombre="{{ alum.get('nombre') }} {{ alum.get('apellido') }}"
+                                        title="Eliminar Inscripción">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="badge bg-secondary opacity-50 fw-normal">Histórico</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-end mb-4 me-4 no-pdf">
+                    <button type="button" 
+                            onclick="generarDescargaDirecta('tabla-original-{{ grado[0] }}', '{{ nombre_archivo }}', '{{ grado[1] }}', '{{ anio }}')"
+                            class="btn px-4 shadow-sm fw-bold btn-gris-oscuro">
+                        <i class="bi bi-download me-2"></i> Descargar PDF
+                    </button>
+                </div>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-people" style="font-size: 3.5rem; color: #e2e8f0;"></i>
+                    <p class="text-muted mt-2 fw-medium">No hay alumnos registrados en este grado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# EL MODAL DE PROMOCIÓN #}
+    {% if es_periodo_editable and not es_historial and loop.index > 1 %}
+    <div class="modal fade" id="modalConfirmarPromocion-{{ grado[0] }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 p-4" style="background-color: #FFD000; color: #1e293b;">
+                    <h5 class="modal-title fw-bold mb-0">Confirmar Promoción</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle-fill mb-3 d-block" style="font-size: 3rem; color: #FFD000;"></i>
+                    <p class="text-secondary fs-5">¿Desea inscribir a los alumnos del grado anterior en <strong style="color: #1e293b;">{{ grado[1] }}</strong>?</p>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-light justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <a href="{{ url_for('promover_grado_ruta', grado_id=grado[0]) }}" 
+                       class="btn rounded-pill px-4 fw-bold shadow-sm" 
+                       style="background-color: #1e293b; color: #FFD000;">Sí, promover estudiantes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% endfor %}
+</div>
+
+{# MODAL DE NUEVA INSCRIPCIÓN (Fuera del loop) #}
+<div class="modal fade" id="modalInscripcion" tabindex="-1" aria-labelledby="modalInscripcionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"> 
+        <div class="modal-content border-0 shadow-lg rounded-4"> 
+            <div class="modal-header p-4 rounded-top-4 border-0" style="background-color: #F5D142; color: #334155;">
+                <h5 class="modal-title fw-bold" id="modalInscripcionLabel">
+                    <i class="bi bi-mortarboard-fill me-2 fs-4"></i>Nueva Inscripción - {{ periodo_nombre }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="{{ url_for('agregar_inscripcion_ruta') }}" method="POST">
+                <div class="modal-body p-4">
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary small text-uppercase uppercase-tracking">1. Buscar Alumno</label>
+                        <div class="input-group shadow-sm rounded-pill overflow-hidden border">
+                            <span class="input-group-text bg-white border-0 ps-3">
+                                <i class="bi bi-card-text" style="color: #334155;"></i>
+                            </span>
+                            <input type="text" id="doc_busqueda" class="form-control border-0 shadow-none fs-6" placeholder="Ingrese CI/DNI del alumno...">
+                            <button class="btn px-4 fw-bold" type="button" id="btn_buscar_est" style="background-color: #334155; color: #F5D142;">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="resultado_busqueda" class="mt-3 p-3 rounded-3 border-start border-4 shadow-inner" style="display: none; transition: all 0.3s ease; border-color: #F5D142 !important; background-color: #fffdf0;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-check-fill fs-4 me-3" style="color: #334155;" id="icono_resultado"></i>
+                                <div>
+                                    <span id="nombre_est_confirmado" class="fw-bold text-dark fs-6"></span>
+                                    <div class="small text-muted">Alumno verificado en el sistema</div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="estudiante_id" id="estudiante_id_hidden">
+                        </div>
+                    </div>
+
+                    <hr class="opacity-25 my-4">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary small text-uppercase uppercase-tracking">2. Asignar Grado</label>
+                            <div class="input-group input-group-lg rounded-3 overflow-hidden border">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-layers text-muted"></i></span>
+                                <select name="grado" class="form-select border-0 shadow-none fs-6" required>
+                                    <option value="" selected disabled>Seleccione el curso...</option>
+                                    {% for g in grados %}
+                                        <option value="{{ g[0] }}">{{ g[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary small text-uppercase uppercase-tracking">3. Fecha de Matriculación</label>
+                            <div class="input-group input-group-lg rounded-3 overflow-hidden border">
+                                <span class="input-group-text bg-light border-0"><i class="bi bi-calendar3 text-muted"></i></span>
+                                <input type="date" name="fecha_inscripcion" class="form-control border-0 shadow-none fs-6" value="{{ current_year }}-01-01" required>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer border-0 p-4 justify-content-center bg-light rounded-bottom-4">
+                    <button type="submit" class="btn btn-lg rounded-pill px-5 shadow fw-bold" style="background-color: #334155; color: #F5D142;">
+                        <i class="bi bi-check-circle-fill me-2"></i> CONFIRMAR MATRÍCULA
+                    </button>
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/inscripciones.js') }}"></script>
+{% endblock %}
+

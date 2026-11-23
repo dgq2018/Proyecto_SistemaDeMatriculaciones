@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<i id="drag-icon" class="bi bi-arrows-move"></i>
+
+<div class="d-flex justify-content-between align-items-end mb-5 pb-4 border-bottom no-pdf mt-4">
+    <div class="d-flex align-items-center">
+        <div class="rounded-4 p-3 d-flex align-items-center justify-content-center shadow"
+             style="width: 70px; height: 70px; background: linear-gradient(135deg, #198754 0%, #0a4d2e 100%) !important;">
+            <i class="bi bi-layers-fill fs-1 text-white"></i>
+        </div>
+
+        <div class="ms-4">
+            <h1 class="fw-bold text-dark mb-0 ls-tight" style="font-size: 2.5rem;">
+                Grados y Cursos
+            </h1>
+            <p class="text-secondary mb-0 fs-5 opacity-75">
+                Gestión de grados/cursos y jerarquía académica
+            </p>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm fw-bold border-0"
+            style="background-color: #198754;" data-bs-toggle="modal" data-bs-target="#modalGrado">
+        <i class="bi bi-plus-circle-fill me-2"></i> Nuevo Grado
+    </button>
+</div>
+
+<div class="card p-3 shadow-sm border-0 bg-white mb-4 rounded-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="m-0 fw-bold text-dark">
+            <i class="bi bi-hdd-stack text-success me-2"></i>Estructura
+        </h4>
+        <button id="btn-reordenar" class="btn btn-outline-success rounded-pill px-4 fw-bold transition-all shadow-sm">
+            <i class="bi bi-arrow-down-up me-2"></i> Organizar Lista
+        </button>
+    </div>
+</div>
+
+<div id="contenedor-grados" class="sortable-container position-relative">
+    {% for grado in grados %}
+    <div data-id="{{ grado[0] }}" class="grado-card draggable-item d-flex align-items-center p-3 mb-3 shadow-sm" style="transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease;">
+        
+        <div class="handle-zone me-4 ps-2">
+            <i class="bi bi-three-dots-vertical fs-4 text-muted opacity-25"></i>
+            <i class="bi bi-three-dots-vertical fs-4 text-muted opacity-25" style="margin-left: -12px;"></i>
+        </div>
+
+        <div class="order-badge me-4">
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-success border border-2 border-success-subtle bg-white shadow-sm"
+                 style="width: 44px; height: 44px; font-size: 1.1rem;">
+                {{ loop.index }}
+            </div>
+        </div>
+
+        <div class="flex-grow-1">
+            <h5 class="fw-bold mb-1 text-dark" style="font-size: 1.2rem;">{{ grado[1] }}</h5>
+            <div class="d-flex align-items-center">
+                <span class="badge rounded-pill fw-medium px-3 py-1"
+                      style="background-color: #e8f5e9; color: #1b5e20; font-size: 0.75rem; border: 1px solid #c8e6c9;">
+                    {{ grado[2] }}
+                </span>
+            </div>
+        </div>
+
+        <div class="actions-zone d-flex gap-2">
+
+            <button type="button" 
+                    class="btn-action text-warning bg-light rounded-3 p-2 border btn-editar-modal"
+                    data-id="{{ grado[0] }}"
+                    data-nombre="{{ grado[1] }}"
+                    data-descripcion="{{ grado[2] }}"
+                    data-siguiente="{{ grado[4] }}"
+                    data-url="{{ url_for('actualizar_grado_ruta', id=grado[0]) }}">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+
+            <a href="#" 
+                class="btn-action text-danger bg-light rounded-3 p-2 border btn-eliminar-grado"
+                data-url="{{ url_for('eliminar_grado_ruta', id=grado[0]) }}"
+                data-nombre="{{ grado[1] }}"
+                title="Eliminar Grado">
+                <i class="bi bi-trash3-fill"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="modalGrado" tabindex="-1" aria-labelledby="modalGradoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #198754 0%, #0a4d2e 100%);">
+                <h5 class="modal-title fw-bold text-white" id="modalGradoLabel">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Registrar Nuevo Grado
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form action="{{ url_for('agregar_grado_ruta') }}" method="POST">
+                <div class="modal-body p-4 bg-light">
+                    <div class="mb-4">
+                        <label for="nombre" class="form-label fw-bold text-dark small text-uppercase opacity-75">Nombre del Grado</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;">
+                                <i class="bi bi-mortarboard text-success"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="nombre" name="nombre"
+                                   placeholder="Ej: Séptimo Grado" required style="border-radius: 0 12px 12px 0; height: 50px;">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label fw-bold text-dark small text-uppercase opacity-75">Descripción o Sección</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0" style="border-radius: 12px 0 0 12px;">
+                                <i class="bi bi-info-circle text-success"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="descripcion" name="descripcion"
+                                   placeholder="Ej: EEBB o Nivel Medio" style="border-radius: 0 12px 12px 0; height: 50px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 p-4 bg-white d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-secondary border" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm border-0" style="background-color: #198754;">
+                        <i class="bi bi-save2-fill me-2"></i>Guardar Grado
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditarGrado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+            <div class="modal-header border-0 p-4" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <h5 class="modal-title fw-bold text-white">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Grado / Curso
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="formEditarGrado" method="POST">
+                <div class="modal-body p-4 bg-light">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark small text-uppercase opacity-75">Nombre del Grado</label>
+                        <input type="text" class="form-control border-2 shadow-none" id="edit_nombre" name="nombre" required style="border-radius: 12px; height: 50px;">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark small text-uppercase opacity-75">Grado Siguiente (Promoción)</label>
+                        <select name="siguiente_grado_id" id="edit_siguiente" class="form-select border-2 shadow-none" style="border-radius: 12px; height: 50px;">
+                            <option value="">-- Ninguno (Fin de Ciclo) --</option>
+                            {% for g in grados %}
+                                <option value="{{ g[0] }}">{{ g[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small text-uppercase opacity-75">Descripción o Sección</label>
+                        <input type="text" class="form-control border-2 shadow-none" id="edit_descripcion" name="descripcion" style="border-radius: 12px; height: 50px;">
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-0 p-4 bg-white d-flex gap-2">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-secondary border" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm border-0 text-dark">
+                        <i class="bi bi-save2-fill me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 1. Configuración Global*/
+    body { 
+        background-color: #f8faf9; 
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* 2. Control de Cursores (Modo Edición) */
+    /* Eliminamos la redundancia agrupando los selectores que usan cursor default */
+    .reorder-active, 
+    .reorder-active *, 
+    .reorder-active .grado-card, 
+    .reorder-active .handle-zone {
+        cursor: default !important;
+    }
+
+    /* Ocultamos el puntero real solo cuando se está arrastrando para que brille el icono de Bootstrap */
+    .draggable-item.dragging,
+    .dragging-active, 
+    .dragging-active * {
+        cursor: none !important;
+    }
+
+    /* 3. Icono de Movimiento (Bootstrap Icon Custom) */
+    #drag-icon {
+        position: fixed;
+        pointer-events: none;
+        z-index: 10000;
+        display: none;
+        color: #198754;
+        font-size: 1.5rem;
+        text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 2px 10px rgba(0,0,0,0.2);
+        transition: transform 0.1s ease;
+        will-change: left, top;
+    }
+
+    /* 4. Tarjetas de Grado */
+    .grado-card {
+        background: #ffffff;
+        border-radius: 18px !important;
+        border: 1px solid rgba(0,0,0,0.03) !important;
+        position: relative;
+        transform-origin: center center; 
+        user-select: none; 
+        -webkit-user-select: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Acento lateral dinámico */
+    .grado-card::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 25%; bottom: 25%;
+        width: 5px;
+        background: #ced4da;
+        border-radius: 0 5px 5px 0;
+        transition: all 0.3s ease;
+    }
+
+    /* Estados de la Tarjeta */
+    .grado-card:hover:not(.dragging) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
+    }
+
+    .reorder-active .grado-card {
+        border-color: #a5d6a7 !important;
+    }
+
+    .reorder-active .grado-card::before {
+        background: #198754;
+        top: 15%; bottom: 15%;
+    }
+
+    /* Efecto Levitación al Arrastrar */
+    .draggable-item.dragging {
+        opacity: 1 !important;
+        z-index: 9999 !important;
+        position: fixed !important;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15) !important;
+        transform: scale(1.04) rotate(1deg);
+        transition: none !important; /* Movimiento instantáneo para fluidez */
+        will-change: transform, top, left;
+    }
+
+    /* 5. Indicador de Inserción (Línea minimalista) */
+    .sortable-placeholder {
+        height: 2px !important;
+        background: #198754;
+        margin: 15px 0;
+        position: relative;
+        border: none !important;
+        box-shadow: 0 0 10px rgba(25, 135, 84, 0.5);
+    }
+
+    /* 6. Componentes de UI (Botones) */
+    #btn-reordenar.active-mode {
+        background-color: #198754 !important;
+        color: white !important;
+        border: none;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    }
+
+    .btn-action {
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+    }
+
+    .btn-action:hover {
+        transform: scale(1.1);
+        background-color: #fff !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+
+{% block scripts %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const contenedor = document.getElementById('contenedor-grados');
+    const btnReordenar = document.getElementById('btn-reordenar');
+    const dragIcon = document.getElementById('drag-icon');
+    
+    let modoReordenamiento = false;
+    let draggedItem = null;
+    let placeholder = null;
+    let initialY = 0;
+    let initialX = 0;
+
+    // --- 1. LÓGICA DE EDICIÓN (MODAL) ---
+    const elModalEditar = document.getElementById('modalEditarGrado');
+    const modalInstancia = new bootstrap.Modal(elModalEditar); 
+    const botonesEditar = document.querySelectorAll('.btn-editar-modal');
+
+    botonesEditar.forEach(boton => {
+        boton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (modoReordenamiento) return; 
+
+            // Cargar datos en el modal
+            const id = this.dataset.id;
+            document.getElementById('edit_nombre').value = this.dataset.nombre;
+            document.getElementById('edit_descripcion').value = this.dataset.descripcion;
+            document.getElementById('edit_siguiente').value = this.dataset.siguiente || "";
+            document.getElementById('formEditarGrado').action = this.dataset.url;
+
+            // Evitar que un grado sea su propio "siguiente"
+            const selectSiguiente = document.getElementById('edit_siguiente');
+            Array.from(selectSiguiente.options).forEach(opt => opt.disabled = (opt.value == id));
+
+            modalInstancia.show(); 
+        });
+    });
+
+    // --- LIMPIEZA DE EMERGENCIA ---
+    // Si el modal se cierra y la pantalla sigue oscura, esto lo fuerza a normalizarse
+    elModalEditar.addEventListener('hidden.bs.modal', () => {
+        document.body.classList.remove('modal-open');
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) backdrop.remove();
+        document.body.style.overflow = '';
+    });
+
+    // --- 2. LÓGICA DE ELIMINACIÓN (SWEETALERT2) ---
+    const botonesEliminar = document.querySelectorAll('.btn-eliminar-grado');
+    botonesEliminar.forEach(boton => {
+        boton.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (modoReordenamiento) return; // Bloqueo de seguridad
+
+            const urlEliminar = this.dataset.url;
+            const nombreGrado = this.dataset.nombre;
+
+            Swal.fire({
+                title: '<span style="color: #1e293b">¿Eliminar Grado?</span>',
+                html: `¿Estás seguro de eliminar el grado:<br><br><strong style="font-size: 1.2rem; color: #dc3545;">${nombreGrado}</strong>?`,
+                icon: 'error',
+                iconColor: '#dc3545',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                borderRadius: '20px',
+                customClass: { popup: 'shadow-lg rounded-4 border-0' }
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = urlEliminar;
+            });
+        });
+    });
+
+    // --- 3. LÓGICA DEL BOTÓN REORDENAR ---
+    btnReordenar.addEventListener('click', () => {
+        modoReordenamiento = !modoReordenamiento;
+        if (modoReordenamiento) {
+            contenedor.classList.add('reorder-active');
+            btnReordenar.classList.replace('btn-outline-success', 'btn-warning'); 
+            btnReordenar.innerHTML = '<i class="bi bi-check-lg me-2"></i> Finalizar y Guardar';
+            document.querySelectorAll('.btn-action').forEach(b => b.style.opacity = '0.3');
+        } else {
+            desactivarModo();
+            guardarOrden(); 
+        }
+    });
+
+    function desactivarModo() {
+        modoReordenamiento = false;
+        contenedor.classList.remove('reorder-active');
+        btnReordenar.classList.replace('btn-warning', 'btn-outline-success');
+        btnReordenar.innerHTML = '<i class="bi bi-arrow-down-up me-2"></i> Organizar Lista';
+        if(dragIcon) dragIcon.style.display = 'none';
+        document.body.classList.remove('dragging-active');
+        document.querySelectorAll('.btn-action').forEach(b => b.style.opacity = '1');
+    }
+
+    // --- 4. SEGUIMIENTO Y ARRASTRE (DRAG & DROP) ---
+    document.addEventListener('mousemove', (e) => {
+        if (!modoReordenamiento) return;
+
+        const sobreTarjeta = e.target.closest('.grado-card');
+        if ((sobreTarjeta || draggedItem) && dragIcon) {
+            dragIcon.style.display = 'block';
+            dragIcon.style.left = (e.clientX + 15) + 'px';
+            dragIcon.style.top = (e.clientY + 15) + 'px';
+        } else if (dragIcon) {
+            dragIcon.style.display = 'none';
+        }
+
+        if (draggedItem) {
+            e.preventDefault();
+            requestAnimationFrame(() => {
+                draggedItem.style.left = `${e.clientX - initialX}px`;
+                draggedItem.style.top = `${e.clientY - initialY}px`;
+                checkSwap(e.clientY);
+            });
+        }
+    });
+
+    contenedor.addEventListener('mousedown', (e) => {
+        if (!modoReordenamiento) return;
+        const targetItem = e.target.closest('.draggable-item');
+        if (targetItem && !e.target.closest('.btn-action')) {
+            draggedItem = targetItem;
+            document.body.classList.add('dragging-active');
+            const rect = draggedItem.getBoundingClientRect();
+            initialX = e.clientX - rect.left;
+            initialY = e.clientY - rect.top;
+
+            placeholder = document.createElement('div');
+            placeholder.classList.add('sortable-placeholder');
+            placeholder.style.height = `${rect.height}px`;
+            placeholder.style.marginBottom = '1rem';
+
+            setTimeout(() => {
+                if (!draggedItem) return;
+                draggedItem.parentNode.insertBefore(placeholder, draggedItem.nextSibling);
+                draggedItem.classList.add('dragging');
+                draggedItem.style.width = `${rect.width}px`;
+            }, 0);
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!draggedItem) return;
+        document.body.classList.remove('dragging-active');
+        draggedItem.classList.remove('dragging');
+        draggedItem.style.cssText = ''; 
+        if (placeholder && placeholder.parentNode) {
+            placeholder.parentNode.insertBefore(draggedItem, placeholder);
+            placeholder.remove();
+        }
+        actualizarNumerosVisuales();
+        draggedItem = null;
+        placeholder = null;
+    });
+
+    function checkSwap(clientY) {
+        if (!placeholder) return;
+        const siblings = Array.from(contenedor.querySelectorAll('.draggable-item:not(.dragging)'));
+        for (let sibling of siblings) {
+            const rect = sibling.getBoundingClientRect();
+            if (clientY < (rect.top + rect.height / 2)) {
+                if (placeholder.nextSibling !== sibling) sibling.parentNode.insertBefore(placeholder, sibling);
+                return;
+            }
+        }
+    }
+
+    function actualizarNumerosVisuales() {
+        contenedor.querySelectorAll('.draggable-item').forEach((item, index) => {
+            const badge = item.querySelector('.order-badge div');
+            if (badge) {
+                badge.innerText = index + 1;
+                badge.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => badge.classList.remove('animate__animated', 'animate__pulse'), 500);
+            }
+        });
+    }
+
+    function guardarOrden() {
+        const orden = Array.from(contenedor.querySelectorAll('.draggable-item')).map((item, index) => {
+            return { id: item.dataset.id, orden: index + 1 };
+        });
+
+        fetch('{{ url_for("actualizar_orden_grados") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({orden})
+        }).then(response => {
+            if (response.ok) {
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success',
+                    title: 'Orden guardado', showConfirmButton: false, timer: 2000
+                });
+            }
+        });
+    }
+});
+</script>
+
+<div id="toast-success" class="shadow-lg border-0" 
+     style="display: none; position: fixed; top: 20px; right: 20px; z-index: 100000; 
+            background: #198754; color: white; padding: 12px 24px; border-radius: 12px; 
+            font-weight: bold; transform: translateY(-20px); transition: all 0.3s ease;">
+    <i class="bi bi-check-circle-fill me-2"></i> Orden guardado con éxito
+</div>
+
+{% endblock %}
+
+{% endblock %}
+
+
+
+
+

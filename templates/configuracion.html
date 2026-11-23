@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
+        <div class="d-flex align-items-center">
+            <div class="bg-dark text-white rounded-3 p-3 d-flex align-items-center justify-content-center shadow-sm">
+                <i class="bi bi-gear-wide-connected fs-1"></i>
+            </div>
+            <div class="ms-4">
+                <h1 class="fw-bold text-dark mb-0 fs-1">Configuración</h1>
+                <p class="text-secondary mb-0 fs-5">Gestión de Periodos y Cierre de Ciclo</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 align-items-center">
+            <button type="button" class="btn btn-primary rounded-pill px-4 shadow fw-bold" data-bs-toggle="modal" data-bs-target="#modalNuevoCiclo">
+                <i class="bi bi-calendar-plus me-2"></i> Abrir Nuevo Ciclo
+            </button>
+
+            <button type="button" class="btn btn-outline-dark rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRecuperacion">
+                <i class="bi bi-shield-lock-fill me-1"></i> Recuperación
+            </button>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-danger rounded-pill px-3 fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#zonaPeligro">
+                    <i class="bi bi-exclamation-octagon me-1"></i> Mantenimiento
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="collapse mb-4" id="zonaPeligro">
+        <div class="row g-4"> 
+            
+            <div class="col-md-6">
+                <div class="card border-danger-subtle bg-danger-subtle bg-opacity-10 p-4 rounded-4 shadow-sm h-100">
+                    <h6 class="text-danger fw-bold small mb-2 text-uppercase">
+                        <i class="bi bi-arrow-clockwise"></i> Reinicio Maestro del Sistema
+                    </h6>
+                    <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                        Esta acción eliminará <strong>todas las inscripciones actuales</strong> y restablecerá el sistema al año del reloj ({{ current_year }}).
+                    </p>
+                    <div class="mt-auto"> <a href="{{ url_for('restablecer_sistema_ruta') }}" 
+                        class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold"
+                        onclick="return confirm('ATENCIÓN: Se creará una COPIA DE SEGURIDAD automática antes de borrar todo. ¿Deseas continuar?')">
+                            EJECUTAR RESTABLECIMIENTO TOTAL
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border-danger p-4 rounded-4 shadow-sm h-100">
+                    <h6 class="text-danger fw-bold small mb-2 text-uppercase">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Zona de Peligro Crítico
+                    </h6>
+                    <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                        Borrado total: inscritos, periodos, historial y backups. <strong>Esta acción no genera copia de seguridad</strong> y es irreversible.
+                    </p>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('limpieza_total_ruta') }}" 
+                        class="btn btn-danger btn-sm w-100 rounded-pill fw-bold"
+                        onclick="return confirm('¿ESTÁS ABSOLUTAMENTE SEGURO? Se borrará TODO el historial y copias de seguridad.')">
+                            BLANQUEAR TODA LA BASE DE DATOS
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h4 class="mb-0 fw-bold text-dark">Historial de Ciclos Lectivos</h4>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Periodo</th>
+                        <th>Año</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acceso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in periodos %}
+                    <tr class="{% if p[3] %}table-primary-subtle{% endif %}">
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ p[1] }}</div>
+                            {% if p[3] %}
+                                <small class="text-primary fw-bold text-uppercase" style="font-size: 0.65rem;">Seleccionado actualmente</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ p[2] }}</td>
+                        <td>
+                            {# p[4] es el campo 'estado' (abierto/cerrado) #}
+                            {% if p[4] == 'abierto' %}
+                                <span class="badge rounded-pill bg-success px-3 shadow-sm">
+                                    <i class="bi bi-unlock-fill me-1"></i> ABIERTO
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-danger px-3 opacity-75">
+                                    <i class="bi bi-lock-fill me-1"></i> CERRADO
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center">
+                                {% if not p[3] %}
+                                    <a href="{{ url_for('cambiar_periodo_ruta', id=p[0]) }}" 
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
+                                       Ver/Activar
+                                    </a>
+                                {% else %}
+                                    <div class="text-success d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-check-circle-fill fs-5 me-1"></i>
+                                        <small class="fw-bold text-uppercase">En uso</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoCiclo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary text-white p-4 border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Abrir Nuevo Ciclo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('nuevo_periodo_ruta') }}" method="POST">
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-4">
+                        Al crear un nuevo ciclo, el anterior se marcará como <strong>Cerrado</strong> y sus nóminas serán archivadas automáticamente.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">NOMBRE DEL CICLO</label>
+                        <input type="text" name="nombre" class="form-control form-control-lg border-2" placeholder="Ej: Ciclo Lectivo 2027" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">AÑO CALENDARIO</label>
+                        <input type="number" name="anio" class="form-control form-control-lg border-2" value="{{ current_year + 1 }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-light justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow fw-bold">
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i>ABRIR Y ACTIVAR
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRecuperacion" tabindex="-1" aria-labelledby="modalRecuperacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-dark text-white p-4 border-0">
+                <h5 class="modal-title fw-bold" id="modalRecuperacionLabel">
+                    <i class="bi bi-shield-lock me-2"></i>Centro de Recuperación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <div class="p-3 bg-light border-bottom">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i> 
+                        Seleccione una copia de seguridad para restaurar el estado completo del sistema a esa fecha.
+                    </p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Fecha de Generación</th>
+                                <th>Descripción / Evento</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in backups %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ b[1] }}</td> 
+                                    <td class="text-muted small">{{ b[2] }}</td>
+                                    <td class="text-center pe-3">
+                                        <a href="{{ url_for('restaurar_backup_ruta', id=b[0]) }}" 
+                                           class="btn btn-sm btn-warning rounded-pill px-3 fw-bold shadow-sm"
+                                           onclick="return confirm('¿Restaurar estos datos? Se perderán los cambios actuales.')">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Restaurar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">
+                                        <i class="bi bi-cloud-slash fs-2 d-block mb-2 opacity-50"></i>
+                                        No hay copias de seguridad disponibles.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light border-0 py-3 justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

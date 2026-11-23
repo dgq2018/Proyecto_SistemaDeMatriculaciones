@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-end mb-5 pb-4 border-bottom">
+        <div class="d-flex align-items-center">
+            <div class="bg-primary text-white rounded-4 p-3 d-flex align-items-center justify-content-center shadow" style="width: 70px; height: 70px;">
+                <i class="bi bi-people-fill fs-1"></i>
+            </div>
+            <div class="ms-4">
+                <h1 class="fw-bold text-dark mb-0 ls-tight" style="font-size: 2.5rem;">Estudiantes</h1>
+                <p class="text-secondary mb-0 fs-5 opacity-75">Gestión de alumnos activos</p>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg rounded-pill px-4 shadow fw-bold d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalEstudiante" style="height: 55px;">
+            <i class="bi bi-person-plus-fill me-2 fs-4"></i> Nuevo Registro
+        </button>
+    </div>
+
+    <div class="card p-3 shadow-sm border-0 bg-white mb-4 rounded-4">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+                    <span class="input-group-text bg-white border-0 ps-4">
+                        <i class="bi bi-search text-primary"></i>
+                    </span>
+                    <input type="text" id="buscadorDoc" class="form-control border-0 shadow-none fs-6" placeholder="Buscar por DNI, Apellido o Nombre...">
+                    <button class="btn btn-white border-0 pe-4" type="button" id="limpiarBusqueda">
+                        <i class="bi bi-x-circle text-muted"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-5 text-end d-flex align-items-center justify-content-end">
+                <a href="{{ url_for('estudiantes_inactivos_ruta') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 me-3 fw-bold border-0 bg-light">
+                    <i class="bi bi-archive-fill me-1"></i> Archivo Inactivos
+                </a>
+                <div class="text-end">
+                    <span class="text-muted small text-uppercase fw-bold d-block" style="font-size: 0.7rem;">Activos</span>
+                    <span class="badge bg-dark rounded-pill px-3 py-2 shadow-sm fs-5 fw-bold">
+                        {{ estudiantes|length }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive shadow rounded-4 overflow-hidden border-0">
+        <table class="table table-hover align-middle mb-0 bg-white" id="tablaEstudiantes">
+            <thead class="table-dark">
+                <tr class="text-center">
+                    <th class="py-3 px-4 text-start" style="width: 80px;">#</th>
+                    <th class="text-start py-3">Estudiante</th>
+                    <th class="py-3">Documento</th>
+                    <th class="py-3">Fecha de Nacimiento</th>
+                    <th class="py-3 text-end px-4" style="width: 200px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for est in estudiantes %}
+                <tr class="fila-estudiante">
+                    <td class="px-4 text-start"><span class="text-muted fw-bold small">#{{ loop.index }}</span></td>
+                    <td class="text-start">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; min-width: 40px;">
+                                <span class="text-primary fw-bold text-uppercase">{{ est[2][0] }}{{ est[1][0] }}</span>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark fs-6">{{ est[2] }}, {{ est[1] }}</div>
+                                <div class="text-muted small">Sistema ID: {{ est[0] }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <code class="bg-light px-2 py-1 rounded text-dark fw-bold">{{ est[3] }}</code>
+                    </td>
+                    <td class="text-center text-secondary">
+                        <i class="bi bi-calendar-event me-1"></i> {{ est[4] }}
+                    </td>
+                   <td class="text-end px-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" 
+                                class="btn btn-warning btn-circular shadow-sm btn-editar-modal"
+                                data-id="{{ est[0] }}"
+                                data-nombre="{{ est[1] }}" 
+                                data-apellido="{{ est[2] }}"
+                                data-documento="{{ est[3] }}"
+                                data-nacimiento="{{ est[4] }}"
+                                data-url="{{ url_for('actualizar_estudiante_ruta', id=est[0]) }}"
+                                title="Editar Estudiante">
+                                <i class="bi bi-pencil-square text-dark"></i>
+                            </button>
+
+                            <a href="#" 
+                                class="btn btn-danger btn-circular shadow-sm btn-baja-estudiante" 
+                                data-url="{{ url_for('eliminar_estudiante_ruta', id=est[0]) }}"
+                                data-nombre="{{ est[2] }} {{ est[1] }}"
+                                title="Dar de Baja">
+                                <i class="bi bi-person-x-fill"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEstudiante" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white p-4 rounded-top-4">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-person-plus-fill me-2"></i> Registrar Nuevo
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('crear_estudiante_ruta') }}" id="formNuevoEstudiante">
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Apellido(s)</label>
+                            <input type="text" name="apellido" class="form-control border-2 shadow-none" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Nombre(s)</label>
+                            <input type="text" name="nombre" class="form-control border-2 shadow-none" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary small text-uppercase">Documento de Identidad</label>
+                        <input type="text" name="documento" class="form-control border-2 shadow-none" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold text-secondary small text-uppercase">Fecha de Nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" class="form-control border-2 shadow-none" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-light rounded-bottom-4 justify-content-center">
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow fw-bold">GUARDAR REGISTRO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditarEstudiante" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header bg-primary text-white rounded-top-4 p-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-gear me-2"></i> Editar Estudiante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditarEstudiante" method="POST">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">APELLIDO</label>
+                            <input type="text" name="apellido" id="edit_apellido" class="form-control border-2" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">NOMBRE</label>
+                            <input type="text" name="nombre" id="edit_nombre" class="form-control border-2" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-secondary">DOCUMENTO (CI)</label>
+                            <input type="text" name="documento" id="edit_documento" class="form-control border-2" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-secondary">FECHA DE NACIMIENTO</label>
+                            <input type="date" name="fecha_nacimiento" id="edit_nacimiento" class="form-control border-2" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-tight { letter-spacing: -1.5px; }
+    .bg-primary { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important; }
+    .btn-circular { width: 40px; height: 40px; border-radius: 50% !important; display: flex; align-items: center; justify-content: center; padding: 0; border: none; transition: transform 0.2s; }
+    .btn-circular:hover { transform: scale(1.1); }
+    .btn-warning { background-color: #F5D142 !important; color: #334155 !important; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. BÚSQUEDA
+    const inputBusqueda = document.getElementById('buscadorDoc');
+    const filas = document.querySelectorAll('.fila-estudiante');
+    const btnLimpiar = document.getElementById('limpiarBusqueda');
+
+    inputBusqueda?.addEventListener('input', function() {
+        const valor = this.value.toLowerCase().trim();
+        filas.forEach(fila => {
+            fila.style.display = fila.innerText.toLowerCase().includes(valor) ? '' : 'none';
+        });
+    });
+
+    btnLimpiar?.addEventListener('click', () => {
+        inputBusqueda.value = '';
+        filas.forEach(f => f.style.display = '');
+    });
+
+    // 2. EDICIÓN
+    document.querySelectorAll('.btn-editar-modal').forEach(boton => {
+        boton.addEventListener('click', function() {
+            // Extraemos los datos del botón
+            const datos = {
+                id: this.dataset.id,
+                nombre: this.dataset.nombre,
+                apellido: this.dataset.apellido,
+                doc: this.dataset.documento,
+                nac: this.dataset.nacimiento,
+                url: this.dataset.url
+            };
+
+            // Los inyectamos en el modal por su ID de input
+            document.getElementById('edit_nombre').value = datos.nombre;
+            document.getElementById('edit_apellido').value = datos.apellido;
+            document.getElementById('edit_documento').value = datos.doc;
+            document.getElementById('edit_nacimiento').value = datos.nac;
+            document.getElementById('formEditarEstudiante').action = datos.url;
+
+            // Abrimos el modal
+            new bootstrap.Modal(document.getElementById('modalEditarEstudiante')).show();
+        });
+    });
+
+    // 3. BAJA
+    document.querySelectorAll('.btn-baja-estudiante').forEach(boton => {
+        boton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.dataset.url;
+            const nombreCompleto = this.dataset.nombre;
+
+            Swal.fire({
+                title: '¿Confirmar Baja?',
+                html: `Dará de baja a: <strong>${nombreCompleto}</strong>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, dar de baja',
+                confirmButtonColor: '#1e293b'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = url;
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}
